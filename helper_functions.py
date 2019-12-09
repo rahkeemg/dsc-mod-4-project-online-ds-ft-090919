@@ -49,7 +49,8 @@ def diagnostics_plot(model=None, figsize=(15, 18)):
     plt.show()
     return None
 
-def one_step_ahead_forecast(df=None, start_date=None, end_date=None, arima_model=None, figsize=(15,6)):
+def one_step_ahead_forecast(df=None, start_date=None, end_date=None, arima_model=None,
+                            plot_df=True, plot_interval=True, print_mse=False, figsize=(15,6)):
         
     """
         Parameters:
@@ -66,6 +67,21 @@ def one_step_ahead_forecast(df=None, start_date=None, end_date=None, arima_model
                     'YYYY'  or 'YYYY-MM'  or 'YYYY-MM-DD'
             arima_model:
                 The arima/sarima model to use for generating predictions 
+                
+            plot_df
+                Boolean to plot the observed value of the dataframe passed into the function
+                By default, the boolean is set to true
+                
+            plot_interval:
+                Boolean to plot interval of confidence of our prediction.
+                By default, the boolean is set to true
+            
+            figsize:
+                Tuple of the width and height of the figure to be used in the
+                
+            print_mse: 
+                Boolean to print the means square error of the prediction vs the oserved.
+                By default, this boolean is set to false
             
         Return:
             Plots the dynamic prediction data for the model and dataframe passed into the function 
@@ -83,15 +99,24 @@ def one_step_ahead_forecast(df=None, start_date=None, end_date=None, arima_model
     rcParams['figure.figsize'] = figsize
 
     #Plot observed values for orange county
-    ax = df.plot(label='observed')
+    if plot_df:
+        ax = df.plot(label='observed')
+        
+        #Plot predicted values
+        pred.predicted_mean.plot(ax=ax, label='One-step ahead Forecast', alpha=.9)
 
-    #Plot predicted values
-    pred.predicted_mean.plot(ax=ax, label='One-step ahead Forecast', alpha=.9)
+    else:
+        ax = pred.predicted_mean.plot(label='One-step ahead Forecast', alpha=.9)
+
+#     #Plot predicted values
+#     pred.predicted_mean.plot(ax=ax, label='One-step ahead Forecast', alpha=.9)
 
     #Plot the range for confidence intervals
-    ax.fill_between(pred_conf.index,
-                    pred_conf.iloc[:, 0],
-                    pred_conf.iloc[:, 1], color='g', alpha=.5)
+    if plot_interval:
+        ax.fill_between(pred_conf.index,
+                        pred_conf.iloc[:, 0],
+                        pred_conf.iloc[:, 1], alpha=.5)
+#                         pred_conf.iloc[:, 1], color='g', alpha=.5)
 
     #Set axes labels
     ax.set_xlabel('Date')
@@ -105,21 +130,40 @@ def one_step_ahead_forecast(df=None, start_date=None, end_date=None, arima_model
     forecasted = pred.predicted_mean
     truth = df.value
 
+    
     # Compute the mean square error
-    mse = ((forecasted - truth) ** 2).mean()
-    print('The Mean Squared Error of our forecasts is {}'.format(round(mse, 2)))
+    if print_mse:
+        mse = ((forecasted - truth) ** 2).mean()
+        print('The Mean Squared Error of our forecasts is {}'.format(round(mse, 2)))
 
 
-def dynamic_prediction(df=None, start_date=None, end_date=None, arima_model=None, figsize=(15,6)):
+def dynamic_prediction(df=None, start_date=None, end_date=None, arima_model=None, 
+                       plot_df=True, plot_interval=True, print_mse=False, figsize=(15,6)):
     """
-        df:
-            Pandas dataframe with the date index and values to graph
-        start_date:
-            The beginning date for our model to begin its prediction
-        end_date:
-            The end date for our prediction model
-        arima_model:
-            The arima/sarima model to use for generating predictions 
+        Parameters
+            df:
+                Pandas dataframe with the date index and values to graph
+            start_date:
+                The beginning date for our model to begin its prediction
+            end_date:
+                The end date for our prediction model
+            arima_model:
+                The arima/sarima model to use for generating predictions
+
+            plot_df
+                Boolean to plot the observed value of the dataframe passed into the function
+                By default, the boolean is set to true
+
+            plot_interval:
+                Boolean to plot interval of confidence of our prediction.
+                By default, the boolean is set to true
+
+            figsize:
+                Tuple of the width and height of the figure to be used in the
+                
+            print_mse: 
+                Boolean to print the means square error of the prediction vs the oserved.
+                By default, this boolean is set to false
             
         Return:
             Plots the dynamic prediction data for the model and dataframe passed into the function 
@@ -138,17 +182,23 @@ def dynamic_prediction(df=None, start_date=None, end_date=None, arima_model=None
     truth = df.value
 
     # Compute the mean square error
-    mse = ((forecasted - truth) ** 2).mean()
-    print('The Mean Squared Error of our Dynamic forecasts is {}'.format(round(mse, 2)))
+    if print_mse:
+        mse = ((forecasted - truth) ** 2).mean()
+        print('The Mean Squared Error of our Dynamic forecasts is {}'.format(round(mse, 2)))
     
     # Plot the dynamic forecast with confidence intervals.
-    ax = df.plot(label='observed', figsize=figsize)
-    pred_dynamic.predicted_mean.plot(label='Dynamic Forecast', ax=ax)
+    if plot_df:
+        ax = df.plot(label='observed', figsize=figsize)
+        pred_dynamic.predicted_mean.plot(label='Dynamic Forecast', ax=ax)
 
-    ax.fill_between(pred_dynamic_conf.index,
-                    pred_dynamic_conf.iloc[:, 0],
-                    pred_dynamic_conf.iloc[:, 1], color='g', alpha=.3)
-    ax.fill_betweenx(ax.get_ylim(), pred_start_date, forecasted.index[-1], alpha=.1, zorder=-1)
+    else:
+        ax = pred_dynamic.predicted_mean.plot(label='Dynamic Forecast')
+        
+    if plot_interval:
+        ax.fill_between(pred_dynamic_conf.index,
+                        pred_dynamic_conf.iloc[:, 0],
+                        pred_dynamic_conf.iloc[:, 1], color='g', alpha=.3)
+        ax.fill_betweenx(ax.get_ylim(), pred_start_date, forecasted.index[-1], alpha=.1, zorder=-1)
 
     #Set labels for the axis
     ax.set_xlabel('Date')
