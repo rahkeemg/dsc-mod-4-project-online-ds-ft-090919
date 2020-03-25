@@ -1,5 +1,5 @@
 
-# Mod 4 Project - Time Series Analysis with Zillow Dataset
+# Time Series Analysis with Zillow Dataset - Mod 4 Project
 
 In this project, we will take a look at a zillow dataset on the housing prices.
 
